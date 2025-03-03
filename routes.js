@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const router = express.Router();
-const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = process.env.UPLOADS_PATH || path.join(__dirname, 'uploads');
 
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
@@ -139,16 +139,15 @@ router.put('/artworks/:id', authMiddleware, upload.single('image'), async (req, 
 
         if (req.file) {
 
-			const baseName = req.file.originalname.replace(/\s+/g, '-').replace(/\.[^/.]+$/, '');  // Remove original extension
-			const newFilename = `uploads/${Date.now()}-${baseName}.jpg`;
-            //const newFilename = `uploads/${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}.jpg`;
+		const baseName = req.file.originalname.replace(/\s+/g, '-').replace(/\.[^/.]+$/, '');  // Remove original extension
+		const filename = `/${Date.now()}-${baseName}.jpg`;
 
             await sharp(req.file.buffer)
                 .resize({ width: 2000, height: 2000, fit: 'inside' })
                 .jpeg({ quality: 80 })
-                .toFile(newFilename);
+                .toFile(uploadDir+filename);
 
-            imagePath = `/${newFilename}`;
+	    imagePath = `/uploads${filename}`;
         }
 
         const tagsArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
